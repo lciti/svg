@@ -112,14 +112,14 @@ svg-extract -- Extract independent graphic files from SVG pictures
 %</dtx>
 %<package&identify&main>  {svg}{include SVG pictures}%
 %<package&identify&extract>  {svg-extract}{extract graphics from SVG pictures}%
-  [2020/11/26 v2.02k]%
+  [2026/09/23 v2.02l]%
 \@tempb
 %</dtx|package&identify>
 % \fi
 %
 % \iffalse
 %<*dtx>
-\documentclass[english,xindy]{tudscrdoc}[2022/07/25]
+\documentclass[english,xindy,paper=a4,pagesize]{tudscrdoc}[2022/07/25]
 \usepackage{iftex}[2020/03/06]
 \iftutex
   \usepackage{fontspec}
@@ -288,6 +288,8 @@ svg-extract -- Extract independent graphic files from SVG pictures
 % \changes{v2.02j}{2020/10/23}{bug fix for automatic version detection of
 %   \app{Inkscape} with MiK\TeX}^^A
 % \changes{v2.02k}{2020/11/26}{MiK\TeX was updated, bug fix removed}^^A
+% \changes{v2.02l}{2026/09/23}{added options \opt{alt}, \opt{actualtext} and
+%   \opt{artifact} for PDF accessibility}^^A
 %
 %
 %
@@ -621,6 +623,36 @@ svg-extract -- Extract independent graphic files from SVG pictures
 % named option of the \pkg{graphicx} package. If the \opt{draft} option is
 % given to \pkg{graphicx}, it's activated for \pkg{svg} as well.
 %
+% \DescribeOptions{alt,actualtext,artifact}^^A
+% \changes{v2.02l}{2026/09/23}{options \opt{alt}, \opt{actualtext} and
+% \opt{artifact} for PDF accessibility}^^A
+% These options specify how an included graphic should be handled by assistive
+% technologies. When PDF tagging is enabled, extensions such as
+% \hrfn
+%    {https://ctan.net/macros/latex2e/required/latex-lab/latex-lab-graphic.pdf}
+%    {\pkg{latex-lab-graphic}}
+% use these keys to add structure tags to the output PDF.
+% The \opt{alt} option adds alternative text, which provides a textual
+% description of the included graphic for users of assistive technologies,
+% such as screen readers.
+% For example, the following includes a chart with alternative text:
+% \begin{svgexample}
+%   \includesvg[alt={A smooth, sinusoid-like wave showing core body
+%     temperature dropping to its minimum around 4:00 AM before rising steadily
+%     throughout the morning hours.},§\meta{options}§]§\marg{svg~filename}§
+% \end{svgexample}
+% The \opt{actualtext} option provides replacement text for a graphic
+% representing text, a symbol, or another textual construct; it should not be
+% used to describe the graphic.
+% The \opt{artifact} option marks decorative graphics, such as background
+% shapes and page decorations, as PDF artifacts. Assistive technologies will
+% normally skip them.
+%
+% Note: Due to a current limitation in \pkg{latex-lab-graphic}, accessibility
+% tagging fails to update the bounding box calculations when
+% \opt{inkscapelatex}=true is combined with \opt{distort}=true or 
+% a nonzero \opt{angle}. Visual output and PDF geometry are unaffected.
+%
 % \DescribeOption{lastpage}^^A
 % A \hrfn{https://bugs.launchpad.net/ubuntu/+source/inkscape/+bug/1417470}{bug} 
 % concerning the \LaTeX~export has been reported for \app{Inkscape}\,0.91. It 
@@ -650,7 +682,8 @@ svg-extract -- Extract independent graphic files from SVG pictures
 %
 % \DescribeMacroParameters{\includesvg}{^^A
 %   inkscape,inkscapeformat,inkscapelatex,inkscapearea,inkscapedpi,^^A
-%   inkscapeopt,svgextension,width,height,distort,scale,pretex,apptex,draft}^^A
+%   inkscapeopt,svgextension,width,height,distort,scale,pretex,apptex,draft,^^A
+%   alt,actualtext,artifact}^^A
 % It is used right in the same way but where \meta{svg~filename} is the 
 % file~name of the SVG~file, where any given file~extension will be replaced
 % with \file{.svg} ruthlessly. In order to change the source file format for 
@@ -706,8 +739,8 @@ svg-extract -- Extract independent graphic files from SVG pictures
 % \end{svgexample}
 %
 % \DescribeMacroParameters{\includeinkscape}{^^A
-%   inkscapeformat,inkscapelatex,width,height,distort,^^A
-%   scale,pretex,apptex,draft,lastpage,angle,origin}^^A
+%   inkscapeformat,inkscapelatex,width,height,distort,scale,^^A
+%   pretex,apptex,draft,alt,actualtext,artifact,lastpage,angle,origin}^^A
 % You can use it similar to \cs{includesvg} but \meta{graphic~filename} has to 
 % be the filename of the already exported graphic file. If a valid 
 % file~extension (\file{.pdf/.eps/.ps/.png}) is given, the current setting for 
@@ -2578,6 +2611,55 @@ svg-extract -- Extract independent graphic files from SVG pictures
 %    \end{macrocode}
 % \end{macro}^^A \if@svg@draft
 % \end{option}^^A draft
+% \begin{option}{alt}
+% \changes{v2.02l}{2026/09/23}{new}^^A
+% \begin{macro}{\svg@param@alt}
+% \begin{option}{actualtext}
+% \changes{v2.02l}{2026/09/23}{new}^^A
+% \begin{macro}{\svg@param@actualtext}
+% \begin{option}{artifact}
+% \changes{v2.02l}{2026/09/23}{new}^^A
+% \begin{macro}{\svg@param@artifact}
+% Accessibility tags passed to the \pkg{graphicx} key mechanism via
+% \cs{setkeys}\marg{Gin}, see \pkg{latex-lab-graphic} for details.
+%    \begin{macrocode}
+\newcommand*\svg@param@alt{}
+\let\svg@param@alt\relax
+\DefineFamilyKey{SVG}{alt}{%
+  \svg@ifvalueisrelax{#1}{%
+    \let\svg@param@alt\relax%
+  }{%
+    \def\svg@param@alt{#1}%
+  }%
+  \FamilyKeyStateProcessed%
+}
+\newcommand*\svg@param@actualtext{}
+\let\svg@param@actualtext\relax
+\DefineFamilyKey{SVG}{actualtext}{%
+  \svg@ifvalueisrelax{#1}{%
+    \let\svg@param@actualtext\relax%
+  }{%
+    \def\svg@param@actualtext{#1}%
+  }%
+  \FamilyKeyStateProcessed%
+}
+\newcommand*\svg@param@artifact{}
+\let\svg@param@artifact\relax
+\DefineFamilyKey{SVG}{artifact}[true]{%
+  \svg@ifvalueisrelax{#1}{%
+    \let\svg@param@artifact\relax%
+  }{%
+    \def\svg@param@artifact{#1}%
+  }%
+  \FamilyKeyStateProcessed%
+}
+%    \end{macrocode}
+% \end{macro}^^A \svg@param@artifact
+% \end{option}^^A artifact
+% \end{macro}^^A \svg@param@actualtext
+% \end{option}^^A actualtext
+% \end{macro}^^A \svg@param@alt
+% \end{option}^^A alt
 %
 % \iffalse
 %</package&option&main>
@@ -3108,6 +3190,33 @@ svg-extract -- Extract independent graphic files from SVG pictures
 %    \end{macrocode}
 % \end{macro}^^A \if@svg@ink@run
 % \end{macro}^^A \svg@ink@run
+%
+% \begin{macro}{\svg@set@accessibility}
+% \changes{v2.02l}{2026/09/23}{new}^^A
+% Sets the accessibility keys in the \pkg{graphicx} namespace via
+% \cs{setkeys}\marg{Gin}. This approach is used because it works
+% uniformly for both inclusion paths: the direct \cs{includegraphics}
+% call (\opt{inkscapelatex}=false) and the \env{picture} environment
+% generated by the \app{Inkscape} \LaTeX{} export
+% (\opt{inkscapelatex}=true). Extensions such as
+% \pkg{latex-lab-graphic} read the \pkg{graphicx} key values to
+% generate the corresponding PDF structure tags, regardless of which
+% path produced the graphic.
+%    \begin{macrocode}
+\newcommand*\svg@set@accessibility{%
+  \ifx\svg@param@alt\relax\else%
+    \setkeys{Gin}{alt={\svg@param@alt}}%
+  \fi%
+  \ifx\svg@param@actualtext\relax\else%
+    \setkeys{Gin}{actualtext={\svg@param@actualtext}}%
+  \fi%
+  \ifx\svg@param@artifact\relax\else%
+    \setkeys{Gin}{artifact={\svg@param@artifact}}%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}^^A \svg@set@accessibility
+%
 % \begin{macro}{\svg@input}
 % \begin{macro}{\svg@@input}
 % \changes{v2.02g}{2020/06/12}{parsing of file extension discarded; meanwhile 
@@ -3137,6 +3246,7 @@ svg-extract -- Extract independent graphic files from SVG pictures
     \@svg@tempswafalse%
   \fi%
   \edef\svg@tempa{#2}%
+  \svg@set@accessibility%
   \if@svg@tempswa%
     \svg@patches{\svg@tempa}%
     \ifnum\value{svg@param@lastpage}=\z@\relax%
@@ -3173,13 +3283,26 @@ svg-extract -- Extract independent graphic files from SVG pictures
     \svg@tempb{\usebox\svg@box}%
   \else%
 %    \end{macrocode}
+% Known limitation: the above \cs{resizebox*} and \cs{rotatebox}
+% transformations (applied when \opt{distort}=true or \opt{angle}$\neq$0,
+% respectively) may leave the BBox information in the accessibility tagging
+% inconsistent with the graphic's final size or rotation when
+% \opt{inkscapelatex}=true. This affects the tagging only, not the graphic's
+% PDF bounding box or rendered geometry. The limitation is in
+% \pkg{latex-lab-graphic}, and a fix will presumably land upstream.^^A
+%
 % If the export with \app{Inkscape} was done without \LaTeX~support, the 
 % resulting graphic file will be included with \cs{includegraphics}.
+% \changes{v2.02l}{2026/09/23}{\opt{scale} passed only when \opt{width}
+%   and \opt{height} are unset,
+%   see \url{https://github.com/latex3/tagging-project/issues/1614}}^^A
+% The \opt{scale} key is passed only when neither \opt{width} nor
+% \opt{height} is set, as a redundant \opt{scale} may interfere with the
+% tag generation of the accessibility layer.
 %    \begin{macrocode}
     \svg@wrn@scale%
     \edef\svg@tempb{%
       draft\if@svg@draft\else=false\fi,%
-      scale=\svg@param@scale,%
       keepaspectratio\if@svg@param@distort=false\fi%
     }%
     \ifdim\svg@param@height>\z@\relax%
@@ -3187,6 +3310,13 @@ svg-extract -- Extract independent graphic files from SVG pictures
     \fi%
     \ifdim\svg@param@width>\z@\relax%
       \edef\svg@tempb{\svg@tempb,width=\svg@param@width}%
+    \fi%
+    \ifdim\svg@param@width>\z@\relax\else%
+      \ifdim\svg@param@height>\z@\relax\else%
+        \ifdim\svg@param@scale\p@=1\p@\relax\else%
+          \edef\svg@tempb{\svg@tempb,scale=\svg@param@scale}%
+        \fi%
+      \fi%
     \fi%
     \ifdim\dimexpr\svg@param@angle\p@\relax=\z@\relax\else%
       \edef\svg@tempb{%
